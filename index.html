@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>화학 평형 실험실</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4f2ed;
+      --surface: #ffffff;
+      --ink: #202522;
+      --muted: #68706b;
+      --line: #d8d8d2;
+      --line-strong: #afb3ad;
+      --blue: #256b84;
+      --blue-soft: #dfeef2;
+      --brown: #a1492e;
+      --brown-soft: #f1e2dc;
+      --green: #2f7654;
+      --green-soft: #e0eee6;
+      --amber: #9a6718;
+      --amber-soft: #f3e9d3;
+      --danger: #a4433e;
+      --shadow: 0 12px 32px rgba(32, 37, 34, 0.07);
+      --radius: 7px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      font-size: 15px;
+      line-height: 1.55;
+      letter-spacing: 0;
+    }
+
+    button, input { font: inherit; }
+
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid rgba(37, 107, 132, 0.28);
+      outline-offset: 2px;
+    }
+
+    .app {
+      width: min(1240px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .title-block p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .reaction-tag {
+      flex: 0 0 auto;
+      padding: 8px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--surface);
+      font-family: "Consolas", "Malgun Gothic", monospace;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 286px minmax(0, 1fr);
+      gap: 24px;
+      margin-top: 24px;
+      align-items: start;
+    }
+
+    .controls {
+      position: sticky;
+      top: 16px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .controls-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .controls-head h2,
+    .section-title {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.3;
+    }
+
+    .reset-button {
+      border: 0;
+      background: transparent;
+      color: var(--blue);
+      padding: 4px 0;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .control-section {
+      padding: 17px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .control-section:last-child { border-bottom: 0; }
+
+    .control-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .control-value {
+      color: var(--blue);
+      font-family: "Consolas", monospace;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .control-note {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    .chem-button {
+      min-height: 42px;
+      border: 1px solid var(--line-strong);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 700;
+      transition: background-color 140ms ease, border-color 140ms ease;
+    }
+
+    .chem-button:hover {
+      border-color: var(--blue);
+      background: #f5fafb;
+    }
+
+    .chem-button .formula { font-family: "Consolas", monospace; }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+      cursor: pointer;
+    }
+
+    .range-ends {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .main-column { min-width: 0; }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr 1fr;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .status-cell {
+      min-width: 0;
+      padding: 14px 16px;
+      border-right: 1px solid var(--line);
+    }
+
+    .status-cell:last-child { border-right: 0; }
+
+    .status-label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .status-value {
+      display: block;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.25;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .status-value.small { font-size: 17px; }
+
+    .direction-cell[data-direction="right"] { background: var(--brown-soft); }
+    .direction-cell[data-direction="left"] { background: var(--blue-soft); }
+    .direction-cell[data-direction="equilibrium"] { background: var(--green-soft); }
+
+    .lab-panel,
+    .chart-panel {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .legend-mark {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .legend-mark.n2o4 {
+      background: var(--blue-soft);
+      border: 2px solid var(--blue);
+    }
+
+    .legend-mark.no2 { background: var(--brown); }
+
+    .lab-body {
+      display: grid;
+      grid-template-columns: minmax(320px, 1.2fr) minmax(240px, 0.8fr);
+      gap: 22px;
+      padding: 20px;
+      align-items: center;
+    }
+
+    .vessel-shell {
+      position: relative;
+      height: 300px;
+      border: 2px solid #7d8580;
+      border-top: 0;
+      border-radius: 0 0 7px 7px;
+      background:
+        linear-gradient(rgba(37, 107, 132, 0.045), rgba(37, 107, 132, 0.015)),
+        repeating-linear-gradient(0deg, transparent 0 49px, rgba(104, 112, 107, 0.08) 50px);
+      overflow: hidden;
+    }
+
+    .piston {
+      position: absolute;
+      left: -2px;
+      right: -2px;
+      z-index: 3;
+      height: 14px;
+      background: #767d78;
+      border-top: 3px solid #555c57;
+      transform: translateY(-7px);
+      transition: top 180ms ease;
+    }
+
+    .piston::before {
+      content: "";
+      position: absolute;
+      width: 42px;
+      height: 58px;
+      left: calc(50% - 21px);
+      bottom: 9px;
+      background: #8b918d;
+      border: 2px solid #666d68;
+    }
+
+    .gas-region {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      transition: height 180ms ease;
+      overflow: hidden;
+    }
+
+    .transfer-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .transfer-label {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      padding: 5px 9px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line-strong);
+      color: var(--ink);
+      font-family: "Consolas", "Malgun Gothic", monospace;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .molecule {
+      position: absolute;
+      transform: translate(-50%, -50%);
+    }
+
+    .molecule.n2o4 {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--blue-soft);
+      border: 2px solid var(--blue);
+      box-shadow: 10px 0 0 -2px var(--blue-soft), 10px 0 0 0 var(--blue);
+    }
+
+    .molecule.no2 {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--brown);
+      box-shadow: 0 0 0 3px rgba(161, 73, 46, 0.1);
+    }
+
+    .molecule.no2::before,
+    .molecule.no2::after {
+      content: "";
+      position: absolute;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--brown);
+    }
+
+    .molecule.no2::before { left: -8px; }
+    .molecule.no2::after { right: -8px; }
+
+    .transfer-particle { z-index: 6; }
+
+    .vessel-scale {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .observation {
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .reaction-arrow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .species {
+      text-align: center;
+      font-family: "Consolas", "Malgun Gothic", monospace;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .arrow-glyph {
+      color: var(--muted);
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .arrow-glyph[data-direction="right"] { color: var(--brown); }
+    .arrow-glyph[data-direction="left"] { color: var(--blue); }
+    .arrow-glyph[data-direction="equilibrium"] { color: var(--green); }
+
+    .reason-box {
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .reason-label {
+      margin: 0 0 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .reason-text { margin: 0; font-weight: 700; }
+
+    .reason-detail {
+      margin: 8px 0 0;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .reason-detail[hidden] { display: none; }
+
+    .formula-note {
+      margin: 13px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .cause-list {
+      display: grid;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .cause-row {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .cause-row:last-child { border-bottom: 0; }
+
+    .cause-key {
+      color: var(--blue);
+      font-weight: 800;
+    }
+
+    .cause-row strong,
+    .cause-row span { display: block; }
+
+    .cause-row span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .chart-panel { min-width: 0; }
+
+    .chart-frame {
+      position: relative;
+      padding: 14px 14px 12px;
+    }
+
+    .chart-frame svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    .relation-badge {
+      flex: 0 0 auto;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: var(--green);
+      font-weight: 800;
+      font-family: "Consolas", monospace;
+      font-size: 13px;
+    }
+
+    .relation-badge[data-direction="right"] {
+      background: var(--brown-soft);
+      color: var(--brown);
+    }
+
+    .relation-badge[data-direction="left"] {
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .axis, .grid-line { vector-effect: non-scaling-stroke; }
+    .axis { stroke: var(--line-strong); stroke-width: 1; }
+    .grid-line { stroke: var(--line); stroke-width: 1; }
+    .axis-text { fill: var(--muted); font-size: 11px; }
+    .value-text { fill: var(--ink); font-size: 12px; font-weight: 700; }
+    .bar-q { fill: var(--brown); transition: y 180ms ease, height 180ms ease; }
+    .bar-k { fill: var(--blue); transition: y 180ms ease, height 180ms ease; }
+    .line-a, .line-b {
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+    }
+    .line-a { stroke: var(--blue); }
+    .line-b { stroke: var(--brown); }
+
+    .fixed-scale-note {
+      padding: 0 16px 14px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .method {
+      margin-top: 16px;
+      padding: 17px 18px;
+      border-top: 1px solid var(--line-strong);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .method strong { color: var(--ink); }
+
+    @media (max-width: 980px) {
+      .workspace { grid-template-columns: 1fr; }
+      .controls { position: static; }
+      .controls-body {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr 1fr;
+      }
+      .control-section { border-right: 1px solid var(--line); border-bottom: 0; }
+      .control-section:last-child { border-right: 0; }
+    }
+
+    @media (max-width: 760px) {
+      .app { width: min(720px, calc(100% - 20px)); padding-top: 18px; }
+      .title-block h1 { font-size: 26px; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .reaction-tag { white-space: normal; }
+      .controls-body { grid-template-columns: 1fr; }
+      .control-section { border-right: 0; border-bottom: 1px solid var(--line); }
+      .status-strip { grid-template-columns: 1fr 1fr; }
+      .direction-cell { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid var(--line); }
+      .status-cell:nth-child(2) { border-right: 1px solid var(--line); }
+      .lab-body { grid-template-columns: 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .observation { padding-top: 2px; }
+    }
+
+    @media (max-width: 440px) {
+      .status-strip { grid-template-columns: 1fr; }
+      .status-cell { border-right: 0; border-bottom: 1px solid var(--line); }
+      .status-cell:last-child { border-bottom: 0; }
+      .button-grid { grid-template-columns: 1fr; }
+      .panel-head { flex-direction: column; }
+      .lab-body { padding: 14px; }
+      .vessel-shell { height: 260px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="title-block">
+        <h1>화학 평형 실험실</h1>
+        <p>조건 변화에 따른 화학 평형 재형성 관찰</p>
+      </div>
+      <div class="reaction-tag" aria-label="반응식">열 + N₂O₄(g) ⇌ 2NO₂(g) &nbsp; ΔH &gt; 0</div>
+    </header>
+
+    <div class="workspace">
+      <aside class="controls" aria-label="실험 조건">
+        <div class="controls-head">
+          <h2>실험 조건</h2>
+          <button class="reset-button" id="reset" type="button">초기화</button>
+        </div>
+        <div class="controls-body">
+          <section class="control-section">
+            <div class="control-label"><span>물질의 양</span><span class="control-value">mol</span></div>
+            <div class="button-grid">
+              <button class="chem-button" type="button" data-action="add-a"><span class="formula">N₂O₄</span> 넣기</button>
+              <button class="chem-button" type="button" data-action="remove-a"><span class="formula">N₂O₄</span> 빼기</button>
+              <button class="chem-button" type="button" data-action="add-b"><span class="formula">NO₂</span> 넣기</button>
+              <button class="chem-button" type="button" data-action="remove-b"><span class="formula">NO₂</span> 빼기</button>
+            </div>
+            <p class="control-note">버튼 입력 직후 Q 변화. 이후 반응 진행.</p>
+          </section>
+
+          <section class="control-section">
+            <label class="control-label" for="pressure">
+              <span>압력</span>
+              <output class="control-value" id="pressure-control-value" for="pressure">1.00 atm</output>
+            </label>
+            <input id="pressure" type="range" min="0.60" max="1.60" value="1" step="0.05">
+            <div class="range-ends"><span>낮은 압력</span><span>높은 압력</span></div>
+            <p class="control-note">압력↑ → 피스톤 하강. 기체 입자 수가 적은 왼쪽이 유리함.</p>
+          </section>
+
+          <section class="control-section">
+            <label class="control-label" for="temperature">
+              <span>온도</span>
+              <output class="control-value" id="temperature-value" for="temperature">25 °C</output>
+            </label>
+            <input id="temperature" type="range" min="10" max="60" value="25" step="1">
+            <div class="range-ends"><span>10 °C</span><span>60 °C</span></div>
+            <p class="control-note">정반응은 흡열 반응임. 온도↑ → K 증가.</p>
+          </section>
+        </div>
+      </aside>
+
+      <section class="main-column">
+        <div class="status-strip" aria-label="현재 상태">
+          <div class="status-cell direction-cell" id="direction-cell" data-direction="equilibrium">
+            <span class="status-label">반응의 진행 방향</span>
+            <strong class="status-value small" id="direction-value">평형</strong>
+          </div>
+          <div class="status-cell">
+            <span class="status-label">N₂O₄의 양</span>
+            <strong class="status-value" id="amount-a">1.00 mol</strong>
+          </div>
+          <div class="status-cell">
+            <span class="status-label">NO₂의 양</span>
+            <strong class="status-value" id="amount-b">1.00 mol</strong>
+          </div>
+        </div>
+
+        <article class="lab-panel">
+          <header class="panel-head">
+            <div>
+              <h2 class="section-title">용기 안의 입자</h2>
+              <p>같은 용기 안에서 두 물질이 함께 반응함.</p>
+            </div>
+            <div class="legend" aria-label="입자 범례">
+              <span class="legend-item"><span class="legend-mark n2o4"></span>N₂O₄</span>
+              <span class="legend-item"><span class="legend-mark no2"></span>NO₂</span>
+            </div>
+          </header>
+          <div class="lab-body">
+            <div>
+              <div class="vessel-shell" id="vessel" role="img" aria-label="피스톤이 있는 반응 용기">
+                <div class="piston" id="piston"></div>
+                <div class="gas-region" id="gas-region"></div>
+                <div class="transfer-layer" id="transfer-layer" aria-hidden="true"></div>
+              </div>
+              <div class="vessel-scale"><span>압축</span><span id="particle-count">입자 모형</span><span>팽창</span></div>
+            </div>
+
+            <div class="observation">
+              <div class="reaction-arrow" aria-label="현재 반응 방향">
+                <span class="species">N₂O₄</span>
+                <span class="arrow-glyph" id="arrow-glyph" data-direction="equilibrium">⇌</span>
+                <span class="species">2NO₂</span>
+              </div>
+              <div class="reason-box" aria-live="polite">
+                <p class="reason-label">관찰 기록</p>
+                <p class="reason-text" id="reason-text">Q와 K가 같아 동적 평형 상태임.</p>
+                <p class="reason-detail" id="last-change" hidden></p>
+              </div>
+              <div class="cause-list" aria-label="평형 이동의 이유">
+                <div class="cause-row">
+                  <strong class="cause-key">가열</strong>
+                  <div><strong>열 + N₂O₄ → 2NO₂</strong><span>온도↑: 흡열 방향(정반응) · 온도↓: 발열 방향(역반응)</span></div>
+                </div>
+                <div class="cause-row">
+                  <strong class="cause-key">가압</strong>
+                  <div><strong>기체 몰수 1 ⇌ 2</strong><span>압력↑: 몰수 감소 방향(역반응) · 압력↓: 몰수 증가 방향(정반응)</span></div>
+                </div>
+                <div class="cause-row">
+                  <strong class="cause-key">농도</strong>
+                  <div><strong>Q = [NO₂]² / [N₂O₄]</strong><span>N₂O₄↑·NO₂↓: 정반응 · N₂O₄↓·NO₂↑: 역반응</span></div>
+                </div>
+              </div>
+              <p class="formula-note">Q &lt; K → 정반응 우세. Q &gt; K → 역반응 우세.</p>
+            </div>
+          </div>
+        </article>
+
+        <div class="charts-grid">
+          <article class="chart-panel">
+            <header class="panel-head">
+              <div>
+                <h2 class="section-title">반응 지수 Q와 평형 상수 K</h2>
+                <p>Q = [NO₂]² / [N₂O₄]</p>
+              </div>
+              <span class="relation-badge" id="relation-badge" data-direction="equilibrium">Q = K</span>
+            </header>
+            <div class="chart-frame">
+              <svg id="qk-chart" viewBox="0 0 460 260" role="img" aria-labelledby="qk-title qk-desc">
+                <title id="qk-title">반응 지수와 평형 상수 막대그래프</title>
+                <desc id="qk-desc">고정된 세로축에서 현재 Q와 온도에 따른 K 비교.</desc>
+              </svg>
+            </div>
+            <div class="fixed-scale-note">세로축 0–12 고정. K는 온도 변화 시에만 변함.</div>
+          </article>
+
+          <article class="chart-panel">
+            <header class="panel-head">
+              <div>
+                <h2 class="section-title">물질의 양 변화</h2>
+                <p>조건 변화 이후 새 평형에 도달하는 과정</p>
+              </div>
+              <div class="legend" aria-label="그래프 범례">
+                <span class="legend-item"><span class="legend-mark n2o4"></span>N₂O₄</span>
+                <span class="legend-item"><span class="legend-mark no2"></span>NO₂</span>
+              </div>
+            </header>
+            <div class="chart-frame">
+              <svg id="history-chart" viewBox="0 0 460 260" role="img" aria-labelledby="history-title history-desc">
+                <title id="history-title">물질의 양 변화 선그래프</title>
+                <desc id="history-desc">시간에 따른 N₂O₄와 NO₂의 양 변화.</desc>
+              </svg>
+            </div>
+          </article>
+        </div>
+
+        <footer class="method">
+          <strong>모형 기준.</strong> 새 평형 조성은 반응 진행량 ξ와 화학양론 관계
+          Δn(N₂O₄) = −ξ, Δn(NO₂) = +2ξ를 이용함. 정반응은 흡열이며 기체 입자 수는
+          1개에서 2개로 늘어남. 농도 기준 Q = [NO₂]²/[N₂O₄]를 사용하며, 25 °C의 K를 1.00으로 설정함.
+        </footer>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const R = 8.314;
+      const MODEL_DELTA_H = 57200;
+      const T_REF = 298.15;
+      const K_REF = 1;
+      const QK_AXIS_MAX = 12;
+      const MAX_HISTORY = 72;
+      const REACTION_TIME_CONSTANT = 1300;
+
+      const state = {
+        nA: 1,
+        nB: 1,
+        pressure: 1,
+        temperature: 25,
+        targetA: 1,
+        targetB: 1,
+        direction: "equilibrium",
+        reason: "Q와 K가 같아 동적 평형 상태임.",
+        lastEffect: "조건 변화 없음.",
+        history: [],
+        animationId: null,
+        frameCount: 0
+      };
+
+      const el = {
+        pressure: document.getElementById("pressure"),
+        temperature: document.getElementById("temperature"),
+        pressureControlValue: document.getElementById("pressure-control-value"),
+        temperatureValue: document.getElementById("temperature-value"),
+        directionCell: document.getElementById("direction-cell"),
+        directionValue: document.getElementById("direction-value"),
+        amountA: document.getElementById("amount-a"),
+        amountB: document.getElementById("amount-b"),
+        piston: document.getElementById("piston"),
+        gasRegion: document.getElementById("gas-region"),
+        transferLayer: document.getElementById("transfer-layer"),
+        vessel: document.getElementById("vessel"),
+        particleCount: document.getElementById("particle-count"),
+        arrowGlyph: document.getElementById("arrow-glyph"),
+        reasonText: document.getElementById("reason-text"),
+        lastChange: document.getElementById("last-change"),
+        relationBadge: document.getElementById("relation-badge"),
+        qkChart: document.getElementById("qk-chart"),
+        historyChart: document.getElementById("history-chart"),
+        reset: document.getElementById("reset")
+      };
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function equilibriumConstant(tempC = state.temperature) {
+        const kelvin = tempC + 273.15;
+        return K_REF * Math.exp((-MODEL_DELTA_H / R) * ((1 / kelvin) - (1 / T_REF)));
+      }
+
+      function systemVolume(nA = state.nA, nB = state.nB, pressure = state.pressure, temperature = state.temperature) {
+        const kelvin = temperature + 273.15;
+        return ((nA + nB) / 2) * (kelvin / T_REF) / pressure;
+      }
+
+      function reactionQuotient(nA = state.nA, nB = state.nB, pressure = state.pressure, temperature = state.temperature) {
+        const volume = Math.max(systemVolume(nA, nB, pressure, temperature), 0.0001);
+        const concentrationA = Math.max(nA / volume, 0.0001);
+        const concentrationB = Math.max(nB / volume, 0.0001);
+        return (concentrationB * concentrationB) / concentrationA;
+      }
+
+      function relation(q = reactionQuotient(), k = equilibriumConstant()) {
+        const tolerance = Math.max(0.004, k * 0.006);
+        if (Math.abs(q - k) <= tolerance) {
+          return { direction: "equilibrium", label: "Q = K", directionLabel: "평형" };
+        }
+        if (q < k) {
+          return { direction: "right", label: "Q < K", directionLabel: "정반응 →" };
+        }
+        return { direction: "left", label: "Q > K", directionLabel: "← 역반응" };
+      }
+
+      function solveEquilibrium(nA, nB, pressure, temperature) {
+        const k = equilibriumConstant(temperature);
+        let low = (-nB / 2) + 0.00001;
+        let high = nA - 0.00001;
+
+        for (let i = 0; i < 90; i += 1) {
+          const extent = (low + high) / 2;
+          const q = reactionQuotient(nA - extent, nB + (2 * extent), pressure, temperature);
+          if (q < k) low = extent;
+          else high = extent;
+        }
+
+        const extent = (low + high) / 2;
+        return {
+          nA: Math.max(0.0001, nA - extent),
+          nB: Math.max(0.0001, nB + (2 * extent))
+        };
+      }
+
+      function formatNumber(value) {
+        if (value >= 10) return value.toFixed(1);
+        if (value >= 1) return value.toFixed(2);
+        return value.toFixed(3);
+      }
+
+      function relativeVolume() {
+        return systemVolume();
+      }
+
+      function recordHistory(force = false) {
+        if (!force && state.frameCount % 4 !== 0) return;
+        state.history.push({ a: state.nA, b: state.nB });
+        if (state.history.length > MAX_HISTORY) state.history.shift();
+      }
+
+      function setTarget(effect) {
+        const target = solveEquilibrium(state.nA, state.nB, state.pressure, state.temperature);
+        const current = relation();
+        state.targetA = target.nA;
+        state.targetB = target.nB;
+        state.lastEffect = effect;
+        state.reason = state.lastEffect;
+        state.direction = current.direction;
+      }
+
+      function settleReason() {
+        state.direction = "equilibrium";
+        state.reason = "새 평형 도달함.";
+      }
+
+      function startReaction() {
+        if (state.animationId !== null) cancelAnimationFrame(state.animationId);
+        recordHistory(true);
+        render();
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          state.nA = state.targetA;
+          state.nB = state.targetB;
+          settleReason();
+          recordHistory(true);
+          render();
+          return;
+        }
+
+        let previousTime = performance.now();
+        const step = (now) => {
+          const elapsed = now - previousTime;
+          if (elapsed < 30) {
+            state.animationId = requestAnimationFrame(step);
+            return;
+          }
+          previousTime = now;
+          const gapA = state.targetA - state.nA;
+          const gapB = state.targetB - state.nB;
+          state.frameCount += 1;
+
+          if (Math.abs(gapA) < 0.0007 && Math.abs(gapB) < 0.0014) {
+            state.nA = state.targetA;
+            state.nB = state.targetB;
+            settleReason();
+            recordHistory(true);
+            render();
+            state.animationId = null;
+            return;
+          }
+
+          const alpha = 1 - Math.exp(-elapsed / REACTION_TIME_CONSTANT);
+          state.nA += gapA * alpha;
+          state.nB += gapB * alpha;
+          state.direction = relation().direction;
+          recordHistory();
+          render();
+          state.animationId = requestAnimationFrame(step);
+        };
+
+        state.animationId = requestAnimationFrame(step);
+      }
+
+      function disturb(action) {
+        if (action === "add-a") {
+          showParticleTransfer("n2o4", "add");
+          state.nA += 0.25;
+          setTarget("N₂O₄ 증가 → 넣은 N₂O₄를 줄이는 정반응 우세.");
+        } else if (action === "remove-a") {
+          showParticleTransfer("n2o4", "remove");
+          state.nA = Math.max(0.18, state.nA - 0.25);
+          setTarget("N₂O₄ 감소 → 부족한 N₂O₄를 만드는 역반응 우세.");
+        } else if (action === "add-b") {
+          showParticleTransfer("no2", "add");
+          state.nB += 0.4;
+          setTarget("NO₂ 증가 → 넣은 NO₂를 줄이는 역반응 우세.");
+        } else if (action === "remove-b") {
+          showParticleTransfer("no2", "remove");
+          state.nB = Math.max(0.18, state.nB - 0.4);
+          setTarget("NO₂ 감소 → 부족한 NO₂를 만드는 정반응 우세.");
+        }
+        startReaction();
+      }
+
+      function showParticleTransfer(species, mode) {
+        const volume = clamp(relativeVolume(), 0.55, 1.55);
+        const gasHeight = 52 + ((volume - 0.55) / 1) * 40;
+        const gasTop = 100 - gasHeight;
+        const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 350 : 1300;
+        const label = document.createElement("span");
+        const speciesLabel = species === "n2o4" ? "N₂O₄" : "NO₂";
+        label.className = "transfer-label";
+        label.textContent = `${mode === "add" ? "+" : "−"} ${speciesLabel}`;
+        el.transferLayer.appendChild(label);
+        label.animate(
+          [{ opacity: 0, transform: "translateY(-6px)" }, { opacity: 1, transform: "translateY(0)" }, { opacity: 0, transform: "translateY(-4px)" }],
+          { duration, easing: "ease-out" }
+        );
+
+        for (let i = 0; i < 5; i += 1) {
+          const particle = document.createElement("span");
+          const x = 22 + ((i * 17) % 62);
+          const insideY = gasTop + 13 + ((i * 19) % Math.max(20, Math.floor(gasHeight - 24)));
+          const startY = mode === "add" ? Math.max(4, gasTop - 16) : insideY;
+          const endY = mode === "add" ? insideY : Math.max(4, gasTop - 18);
+          particle.className = `molecule ${species} transfer-particle`;
+          particle.style.left = `${x}%`;
+          particle.style.top = `${startY}%`;
+          el.transferLayer.appendChild(particle);
+          particle.animate(
+            [
+              { top: `${startY}%`, opacity: mode === "add" ? 0 : 1 },
+              { top: `${endY}%`, opacity: mode === "add" ? 1 : 0 }
+            ],
+            { duration, delay: i * 55, easing: "cubic-bezier(.2,.7,.2,1)", fill: "forwards" }
+          );
+        }
+
+        window.setTimeout(() => el.transferLayer.replaceChildren(), duration + 350);
+      }
+
+      function renderParticles() {
+        const visualVolume = clamp(relativeVolume(), 0.55, 1.55);
+        const normalizedHeight = 52 + ((visualVolume - 0.55) / 1) * 40;
+        el.gasRegion.style.height = `${normalizedHeight}%`;
+        el.piston.style.top = `${100 - normalizedHeight}%`;
+
+        const maxVisual = 38;
+        const total = Math.max(state.nA + state.nB, 0.01);
+        const visualTotal = clamp(Math.round(total * 18), 14, maxVisual);
+        const countA = Math.round(visualTotal * (state.nA / total));
+        const countB = visualTotal - countA;
+        const fragment = document.createDocumentFragment();
+
+        for (let i = 0; i < visualTotal; i += 1) {
+          const particle = document.createElement("span");
+          const isA = i < countA;
+          const seed = (i * 47 + (isA ? 13 : 29)) % 997;
+          const x = 7 + ((seed * 37) % 86);
+          const y = 8 + ((seed * 61) % 83);
+          particle.className = `molecule ${isA ? "n2o4" : "no2"}`;
+          particle.style.left = `${x}%`;
+          particle.style.top = `${y}%`;
+          particle.setAttribute("aria-hidden", "true");
+          fragment.appendChild(particle);
+        }
+
+        el.gasRegion.replaceChildren(fragment);
+        el.particleCount.textContent = `N₂O₄ ${countA} · NO₂ ${countB}`;
+        el.vessel.setAttribute("aria-label", `피스톤 반응 용기. N₂O₄ 모형 ${countA}개와 NO₂ 모형 ${countB}개`);
+      }
+
+      function renderQKChart() {
+        const q = reactionQuotient();
+        const k = equilibriumConstant();
+        const info = relation(q, k);
+        const width = 460;
+        const height = 260;
+        const plot = { left: 48, right: 18, top: 24, bottom: 42 };
+        const baseline = height - plot.bottom;
+        const innerHeight = baseline - plot.top;
+        const y = (value) => baseline - (clamp(value, 0, QK_AXIS_MAX) / QK_AXIS_MAX) * innerHeight;
+        const ticks = [0, 3, 6, 9, 12];
+        const qX = 108;
+        const kX = 286;
+        const barWidth = 66;
+        const qTop = y(q);
+        const kTop = y(k);
+        const qLabel = q > QK_AXIS_MAX ? `>${QK_AXIS_MAX}` : formatNumber(q);
+        const kLabel = k > QK_AXIS_MAX ? `>${QK_AXIS_MAX}` : formatNumber(k);
+        const grid = ticks.map((tick) => `
+          <line class="grid-line" x1="${plot.left}" y1="${y(tick)}" x2="${width - plot.right}" y2="${y(tick)}"></line>
+          <text class="axis-text" x="${plot.left - 9}" y="${y(tick) + 4}" text-anchor="end">${tick}</text>
+        `).join("");
+
+        el.relationBadge.textContent = info.label;
+        el.relationBadge.dataset.direction = info.direction;
+        el.qkChart.innerHTML = `
+          <title id="qk-title">반응 지수와 평형 상수 막대그래프</title>
+          <desc id="qk-desc">고정된 0에서 12까지의 세로축. Q ${formatNumber(q)}, K ${formatNumber(k)}.</desc>
+          ${grid}
+          <line class="axis" x1="${plot.left}" y1="${baseline}" x2="${width - plot.right}" y2="${baseline}"></line>
+          <rect class="bar-q" x="${qX}" y="${qTop}" width="${barWidth}" height="${baseline - qTop}" rx="3"></rect>
+          <rect class="bar-k" x="${kX}" y="${kTop}" width="${barWidth}" height="${baseline - kTop}" rx="3"></rect>
+          <text class="value-text" x="${qX + barWidth / 2}" y="${Math.max(15, qTop - 8)}" text-anchor="middle">${qLabel}</text>
+          <text class="value-text" x="${kX + barWidth / 2}" y="${Math.max(15, kTop - 8)}" text-anchor="middle">${kLabel}</text>
+          <text class="axis-text" x="${qX + barWidth / 2}" y="${height - 14}" text-anchor="middle">반응 지수 Q</text>
+          <text class="axis-text" x="${kX + barWidth / 2}" y="${height - 14}" text-anchor="middle">평형 상수 K</text>
+        `;
+      }
+
+      function renderHistoryChart() {
+        const width = 460;
+        const height = 260;
+        const plot = { left: 48, right: 18, top: 22, bottom: 42 };
+        const history = state.history.length ? state.history : [{ a: state.nA, b: state.nB }];
+        const observedMax = Math.max(2.2, ...history.flatMap((point) => [point.a, point.b]));
+        const axisMax = Math.ceil(observedMax * 2) / 2;
+        const innerWidth = width - plot.left - plot.right;
+        const baseline = height - plot.bottom;
+        const innerHeight = baseline - plot.top;
+        const x = (index) => plot.left + (history.length === 1 ? 0 : (index / (history.length - 1)) * innerWidth);
+        const y = (value) => baseline - (value / axisMax) * innerHeight;
+        const path = (key) => history.map((point, index) => `${index === 0 ? "M" : "L"}${x(index).toFixed(1)},${y(point[key]).toFixed(1)}`).join(" ");
+        const ticks = [0, axisMax / 2, axisMax];
+        const grid = ticks.map((tick) => `
+          <line class="grid-line" x1="${plot.left}" y1="${y(tick)}" x2="${width - plot.right}" y2="${y(tick)}"></line>
+          <text class="axis-text" x="${plot.left - 9}" y="${y(tick) + 4}" text-anchor="end">${tick.toFixed(1)}</text>
+        `).join("");
+
+        el.historyChart.innerHTML = `
+          <title id="history-title">물질의 양 변화 선그래프</title>
+          <desc id="history-desc">현재 N₂O₄ ${state.nA.toFixed(2)}몰, NO₂ ${state.nB.toFixed(2)}몰.</desc>
+          ${grid}
+          <line class="axis" x1="${plot.left}" y1="${baseline}" x2="${width - plot.right}" y2="${baseline}"></line>
+          <path class="line-a" d="${path("a")}"></path>
+          <path class="line-b" d="${path("b")}"></path>
+          <circle cx="${x(history.length - 1)}" cy="${y(history.at(-1).a)}" r="4" fill="var(--blue)"></circle>
+          <circle cx="${x(history.length - 1)}" cy="${y(history.at(-1).b)}" r="4" fill="var(--brown)"></circle>
+          <text class="axis-text" x="${plot.left}" y="${height - 14}">이전</text>
+          <text class="axis-text" x="${width - plot.right}" y="${height - 14}" text-anchor="end">현재</text>
+          <text class="axis-text" x="10" y="14">mol</text>
+        `;
+      }
+
+      function render() {
+        const q = reactionQuotient();
+        const k = equilibriumConstant();
+        const info = relation(q, k);
+        if (state.animationId !== null) state.direction = info.direction;
+
+        el.pressureControlValue.textContent = `${state.pressure.toFixed(2)} atm`;
+        el.temperatureValue.textContent = `${state.temperature} °C`;
+        el.directionCell.dataset.direction = state.direction;
+        el.directionValue.textContent = state.direction === "right" ? "정반응 →" : state.direction === "left" ? "← 역반응" : "평형";
+        el.amountA.textContent = `${state.nA.toFixed(2)} mol`;
+        el.amountB.textContent = `${state.nB.toFixed(2)} mol`;
+        el.arrowGlyph.dataset.direction = state.direction;
+        el.arrowGlyph.textContent = state.direction === "right" ? "⇢" : state.direction === "left" ? "⇠" : "⇌";
+        el.reasonText.textContent = state.reason;
+        const showLastChange = state.direction === "equilibrium" && state.lastEffect !== "조건 변화 없음.";
+        el.lastChange.hidden = !showLastChange;
+        el.lastChange.textContent = showLastChange ? `직전 변화 · ${state.lastEffect}` : "";
+
+        renderParticles();
+        renderQKChart();
+        renderHistoryChart();
+      }
+
+      function reset() {
+        if (state.animationId !== null) cancelAnimationFrame(state.animationId);
+        Object.assign(state, {
+          nA: 1,
+          nB: 1,
+          pressure: 1,
+          temperature: 25,
+          targetA: 1,
+          targetB: 1,
+          direction: "equilibrium",
+          reason: "Q와 K가 같아 동적 평형 상태임.",
+          lastEffect: "조건 변화 없음.",
+          history: [],
+          animationId: null,
+          frameCount: 0
+        });
+        el.pressure.value = "1";
+        el.temperature.value = "25";
+        recordHistory(true);
+        render();
+      }
+
+      document.querySelectorAll("[data-action]").forEach((button) => {
+        button.addEventListener("click", () => disturb(button.dataset.action));
+      });
+
+      el.pressure.addEventListener("input", (event) => {
+        const previous = state.pressure;
+        state.pressure = Number(event.target.value);
+        const effect = state.pressure > previous
+          ? "압력 증가 → 압력을 낮추는 몰수 감소 방향, 즉 역반응 우세."
+          : "압력 감소 → 압력을 높이는 몰수 증가 방향, 즉 정반응 우세.";
+        setTarget(effect);
+        startReaction();
+      });
+
+      el.temperature.addEventListener("input", (event) => {
+        const previous = state.temperature;
+        state.temperature = Number(event.target.value);
+        const effect = state.temperature > previous
+          ? "온도 증가 → 열을 흡수하는 방향, 즉 정반응 우세."
+          : "온도 감소 → 열을 만드는 방향, 즉 역반응 우세.";
+        setTarget(effect);
+        startReaction();
+      });
+
+      el.reset.addEventListener("click", reset);
+      reset();
+    })();
+  </script>
+</body>
+</html>
